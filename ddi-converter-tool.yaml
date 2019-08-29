@@ -38,27 +38,34 @@ paths:
         schema:
           type: string
       - in: query
+        name: xsl_url
+        description: XSL URL
+        required: true
+        schema:
+          type: string
+      - in: query
         name: author_name
         description: Author name
-        required: true
         schema:
           type: string
       - in: query
         name: author_affiliation
         description: Author Affiliation
-        required: true
         schema:
           type: string
       - in: query
         name: contact_name
         description: Dataset Contact Name
-        required: true
         schema:
           type: string
       - in: query
         name: contact_email
         description: Dataset Contact Email
-        required: true
+        schema:
+          type: string
+      - in: query
+        name: subject
+        description: Dataset Subject
         schema:
           type: string
 
