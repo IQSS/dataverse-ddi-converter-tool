@@ -88,7 +88,7 @@
             "typeName": "dsDescription"
             },
             {
-            "value": ["@DICIPLINE@"],
+            "value": ["@SUBJECT@"],
             "typeClass": "controlledVocabulary",
             "multiple": true,
             "typeName": "subject"
