@@ -70,3 +70,7 @@ pip setup.py
 pip install lxml
 pip install xmltodict
 pip install pyDataverse
+
+```
+curl -X POST "http://127.0.0.1:8520/api/convert/ekoi/c89e6f53-9edc-4a73-9ff5-4447e6911f2b?xsl_url=https%3A%2F%2Fraw.githubusercontent.com%2Fekoi%2Fddi-converter-tool%2Fmaster%2Fxsl%2Fddi-to-dataset-csv.xsl&author_name=Indarto%2C%20E&author_affiliation=DANS&contact_name=Indarto%2C%20Eko&contact_email=eko.indarto%40dans.knaw.nl&subject=Medicine%2C%20Health%20and%20Life%20Sciences" -H "accept: */*" -H "Content-Type: multipart/form-data" -F "ddi_file=@SSI-ddi3.xml;type=text/xml"
+```
