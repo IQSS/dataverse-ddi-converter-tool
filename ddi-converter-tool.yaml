@@ -1,0 +1,86 @@
+openapi: 3.0.0
+servers:
+- url: 'http://127.0.0.1:8520/api'
+info:
+  description: |
+    DDI Converter Tool is an open source software for converting a DDI xml to Dataverse Metadata and its files\
+    [DDI Converter Tool Github](https://github.com/ekoi/ddi-converter-tool).
+  version: "1.0.0"
+  title: DDI Converter Tool
+  termsOfService: 'http://swagger.io/terms/'
+  contact:
+    email: eko.indarto@dans.knaw.nl
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+
+
+paths:
+  /convert/{dv_target}/{api_token}:
+    post:
+      summary: Convert DDI and ingest it to target dataverse
+      operationId: convertDDI
+      parameters:
+#      - name: api_key
+#        in: header
+#        schema:
+#          type: string
+      - name: dv_target
+        in: path
+        required: true
+        description:  The target of dataverse alias or id (e.g. root)
+        schema:
+          type: string
+      - name: api_token
+        in: path
+        description: Users' authenication token for the api
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: author_name
+        description: Author name
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: author_affiliation
+        description: Author Affiliation
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: contact_name
+        description: Dataset Contact Name
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: contact_email
+        description: Dataset Contact Email
+        required: true
+        schema:
+          type: string
+
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+#                id:
+#                  type: string
+                ddi_file:
+                  type: string
+                  format: binary
+#                json_file:
+#                  type: string
+#                  format: binary
+        required: true
+      responses:
+        '201':
+          description: DDI succesfully converted and ingested.
+        '400':
+          description: DDI couldn't have been converted or ingested.
+        '405':
+          description: Invalid input
