@@ -17,11 +17,6 @@
     <xsl:output method="text" encoding="UTF-8" indent="yes" name="text"/>
     <xsl:variable name="directory-name" select="'@OUTPUT-DIRECTORY-NAME@'"/>
     <xsl:variable name="delimiter" select="','"/>
-    <xsl:key name="field" match="/ddi:DDIInstance/dataDscr/var/*" use="@*/string()"/>
-    <!-- variable containing the first occurrence of each field -->
-    <xsl:variable name="allFields"
-                  select="/ddi:DDIInstance/dataDscr/var/*[generate-id()=generate-id(key('field', @*/string()))]" />
-
     <xsl:template match="/">
         <xsl:call-template name="metadata-json"/>
         <xsl:call-template name="csv-files"/>
@@ -102,31 +97,22 @@
         <xsl:for-each select="/ddi:DDIInstance/dataDscr/var">
             <xsl:variable name="csv-file-name"
                           select="concat($directory-name,'/',@name,'.csv')" />
-            <xsl:value-of select="$csv-file-name" />  <!-- Creating  -->
             <xsl:result-document href="{$csv-file-name}" format="text">
-                <xsl:for-each select="$allFields">
-                    <xsl:if test="local-name()='sumStat'">
-                        <xsl:value-of select="@*/string()" />
-                        <xsl:if test="following-sibling::sumStat">
-                            <xsl:value-of select="$delimiter" />
-                        </xsl:if>
+                <xsl:for-each select="  ./sumStat">
+                    <xsl:value-of select="@type" />
+                    <xsl:if test="following-sibling::sumStat">
+                        <xsl:value-of select="$delimiter" />
                     </xsl:if>
                 </xsl:for-each>
                 <xsl:text>&#10;</xsl:text>
-                <xsl:call-template name="variables-value"/>
-                <xsl:text>&#10;</xsl:text>
+                <xsl:for-each select="./sumStat">
+                    <xsl:value-of select="normalize-space(.)"/>
+                    <xsl:if test="following-sibling::sumStat">
+                        <xsl:value-of select="$delimiter" />
+                    </xsl:if>
+                </xsl:for-each>
             </xsl:result-document>
-        </xsl:for-each>
-    </xsl:template>
-    <xsl:template name="variables-value">
-
-        <xsl:for-each select="$allFields">
-            <xsl:if test="local-name()='sumStat'">
-                <xsl:value-of select="normalize-space(.)"/>
-                <xsl:if test="following-sibling::sumStat">
-                    <xsl:value-of select="$delimiter" />
-                </xsl:if>
-            </xsl:if>
+            <xsl:text>&#10;</xsl:text>
         </xsl:for-each>
     </xsl:template>
 
