@@ -1,0 +1,108 @@
+openapi: 3.0.0
+info:
+  title: DDI Converter Tool
+  description: |
+    DDI Converter Tool is an open source software for converting a DDI xml to Dataverse Metadata and its files\
+    [DDI Converter Tool Github](https://github.com/ekoi/ddi-converter-tool).
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: eko.indarto@dans.knaw.nl
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: http://127.0.0.1:8520/api
+paths:
+  /convert/{dv_target}/{api_token}:
+    post:
+      summary: Convert DDI and ingest it to target dataverse
+      operationId: convert_ddi
+      parameters:
+      - name: dv_target
+        in: path
+        description: The target of dataverse alias or id (e.g. root)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: api_token
+        in: path
+        description: Users' authenication token for the api
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: xsl_url
+        in: query
+        description: XSL URL
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: author_name
+        in: query
+        description: Author name
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: author_affiliation
+        in: query
+        description: Author Affiliation
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: contact_name
+        in: query
+        description: Dataset Contact Name
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: contact_email
+        in: query
+        description: Dataset Contact Email
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: subject
+        in: query
+        description: Dataset Subject
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/body'
+        required: true
+      responses:
+        201:
+          description: DDI succesfully converted and ingested.
+        400:
+          description: DDI couldn't have been converted or ingested.
+        405:
+          description: Invalid input
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+components:
+  schemas:
+    body:
+      type: object
+      properties:
+        ddi_file:
+          type: string
+          format: binary
+

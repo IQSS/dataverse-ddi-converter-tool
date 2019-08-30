@@ -1,26 +1,20 @@
 import connexion
-import six
 import os
 import lxml.etree as ET
-import json
-import xmltodict
+import urllib.request
 
 from pyDataverse.api import Api
-from pyDataverse.models import Dataverse
 from datetime import datetime
-
-from swagger_server import util
-
-ALLOWED_EXTENSIONS = {'xml'}
-base_url='http://ddvn.dans.knaw.nl:8080'
-api = Api(base_url)
 
 
 # TODO: Using config.py
+ALLOWED_EXTENSIONS = {'xml'}
+TEMPORARY_DIRECTORY = '/Users/akmi/eko-temp'
+DATAVERSE_BASE_URL='http://ddvn.dans.knaw.nl:8080'
+api = Api(DATAVERSE_BASE_URL)
 
 
-
-def convert_ddi(ddi_file, dv_target, api_token, author_name, author_affiliation, contact_name, contact_email):  # noqa: E501
+def convert_ddi(ddi_file, dv_target, api_token, xsl_url, author_name=None, author_affiliation=None, contact_name=None, contact_email=None, subject=None):  # noqa: E501
     """Convert DDI and ingest it to target dataverse
 
      # noqa: E501
@@ -31,6 +25,8 @@ def convert_ddi(ddi_file, dv_target, api_token, author_name, author_affiliation,
     :type dv_target: str
     :param api_token: Users&#x27; authenication token for the api
     :type api_token: str
+    :param xsl_url: XSL URL
+    :type xsl_url: str
     :param author_name: Author name
     :type author_name: str
     :param author_affiliation: Author Affiliation
@@ -39,54 +35,56 @@ def convert_ddi(ddi_file, dv_target, api_token, author_name, author_affiliation,
     :type contact_name: str
     :param contact_email: Dataset Contact Email
     :type contact_email: str
+    :param subject: Dataset Subject
+    :type subject: str
 
     :rtype: None
     """
+    xsl_src = urllib.request.urlopen(xsl_url)
+
+    if xsl_src.getcode() != 200:
+        return "NOT FOUND XSL", 404
+    xsl = xsl_src.read()
+    xsl_content = xsl.decode("utf8")
+    xsl_src.close()
+    if not xsl:
+        return "Empty xsl", 404
     if not is_dataverse_target_exist(dv_target, api_token):
         return "Dataverse Not Fould", 404
 
-    uploaded_file = connexion.request.files['file_name']
+    uploaded_file = connexion.request.files['ddi_file']
     if uploaded_file and allowed_file(uploaded_file.filename):
-        uploaded_filename = add_file_suffic(uploaded_file.filename)
-        uploaded_file.save(os.path.join('/Users/akmi/eko-temp', uploaded_filename))
-        x = content(uploaded_filename)
-        print(x)
+        uploaded_filename = uploaded_file.filename
+        dir_name =  create_directory_name()
 
-        dom = ET.parse("/Users/akmi/eko-temp/" + uploaded_filename)
-        xslt = ET.parse("/Users/akmi/eko-temp/convert-ddi.xsl")
+        xsl_content = xsl_content.replace('@TODO-AUTHOR-NAME@', author_name) \
+            .replace('@TODO-AUTHOR-AFFILIATION@', author_affiliation) \
+            .replace('@TODO-CONTACT-EMAIL@', contact_email) \
+            .replace('@TODO-CONTACT-NAME@', contact_name) \
+            .replace('@SUBJECT@', subject) \
+            .replace('@OUTPUT-DIRECTORY-NAME@',dir_name)
+
+        os.mkdir(dir_name)
+
+        with open(dir_name + '/converter.xsl', "w") as text_file:
+            print(xsl_content, file=text_file)
+
+        uploaded_file.save(os.path.join(dir_name, uploaded_filename))
+
+        xml_file = dir_name + '/' + uploaded_filename
+        dom = ET.parse(xml_file)
+        xsl_file = dir_name + '/converter.xsl'
+        xslt = ET.parse(xsl_file)
         transform = ET.XSLT(xslt)
         newdom = transform(dom)
-        xmlString = ET.tostring(newdom, pretty_print=True).decode('utf-8')
-        print(xmlString)
-        # Based on https://stackoverflow.com/questions/26726728/remove-namespace-with-xmltodict-in-python
-        # So, I will remove it from xmlString.  Not ideal.
-        xmlString = xmlString.replace('xmlns:ddi="ddi:instance:3_1"','') \
-            .replace('xmlns:r="ddi:reusable:3_1"','') \
-            .replace('xmlns:dc="ddi:dcelements:3_1"','') \
-            .replace('xmlns:dc2="http://purl.org/dc/elements/1.1/"','') \
-            .replace('xmlns:s="ddi:studyunit:3_1"','') \
-            .replace('xmlns:c="ddi:conceptualcomponent:3_1"','') \
-            .replace('xmlns:d="ddi:datacollection:3_1"','') \
-            .replace('xmlns:l="ddi:logicalproduct:3_1"','') \
-            .replace('xmlns:p="ddi:physicaldataproduct:3_1"','') \
-            .replace('xmlns:pi="ddi:physicalinstance:3_1"','') \
-            .replace('xmlns:a="ddi:archive:3_1"','')
-        xmlString = xmlString.replace('@TODO-AUTHOR-NAME@','Indarto, Eko')
-        print(xmlString)
 
-        datasetJson = json.dumps(xmltodict.parse(xmlString), indent=0)
-        print("\nJSON output(output.json):")
-        print(datasetJson)
-        eko = datasetJson.replace('"false"','false').replace('"true"','true').replace(',\nnull','')
-        print('--begin---')
-        print(eko)
-        print('--end---')
+        if not newdom:
+            return "Error during transformation.", 500
         # #
-        # y = content('dataset_min.json').encode("utf-8")
-        # print(y)
-        z = ingest_dataset(dv_target, eko, api_token)
+        dataset_json = content(dir_name + '/dataset.json')
+        ingest_result = ingest_dataset(dv_target, dataset_json, api_token)
         print("ingest result:")
-        print(z)
+        print(ingest_result)
         return "Upload success", 201
     else:
         return "ERROR", 404
@@ -97,11 +95,11 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def content(filename):
-    text = open('/Users/akmi/eko-temp/' + filename , 'r+')
+def content(filepath):
+    text = open(filepath, 'r+')
     content = text.read()
     text.close()
-    return content
+    return content.encode("utf-8")
 
 def is_dataverse_target_exist(dataverse_alias_or_id, api_token):
     api.api_token=api_token
@@ -119,6 +117,12 @@ def ingest_dataset(dataverse_target, jsondataset, api_token):
     print(resp)
     return resp.status_code
 
+def create_directory_name():
+    now = datetime.now()
+    return TEMPORARY_DIRECTORY + '/' + now.strftime("%Y-%m-%d_%H%M%S.%f")
+
 def add_file_suffic(filename):
     now = datetime.now()
     return filename.rsplit('.', 1)[0] + now.strftime("_%Y-%m-%d_%H%M%S.%f.") + filename.rsplit('.', 1)[1]
+
+
