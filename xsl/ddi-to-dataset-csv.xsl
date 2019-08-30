@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="2.0"
+<xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 exclude-result-prefixes="xs"
@@ -13,7 +13,9 @@
                 xmlns:l="ddi:logicalproduct:3_1"
                 xmlns:p="ddi:physicaldataproduct:3_1"
                 xmlns:pi="ddi:physicalinstance:3_1"
-                xmlns:a="ddi:archive:3_1">
+                xmlns:a="ddi:archive:3_1"
+                xmlns:exsl="http://exslt.org/common"
+                extension-element-prefixes="exsl">
     <xsl:output method="text" encoding="UTF-8" indent="yes" name="text"/>
     <xsl:variable name="directory-name" select="'@OUTPUT-DIRECTORY-NAME@'"/>
     <xsl:variable name="delimiter" select="','"/>
@@ -24,7 +26,7 @@
     <xsl:template name="metadata-json">
         <xsl:variable name="dataset-file-name"
                       select="concat($directory-name,'/','dataset.json')" />
-        <xsl:result-document href="{$dataset-file-name}" format="text">
+        <exsl:document method="text" href="{$dataset-file-name}">
             {"datasetVersion": {"metadataBlocks": {"citation": {
             "fields": [
             {
@@ -91,13 +93,13 @@
             ],
             "displayName": "Citation Metadata"
             }}}}
-        </xsl:result-document>
+        </exsl:document>>
     </xsl:template>
     <xsl:template name="csv-files">
         <xsl:for-each select="/ddi:DDIInstance/dataDscr/var">
             <xsl:variable name="csv-file-name"
                           select="concat($directory-name,'/',@name,'.csv')" />
-            <xsl:result-document href="{$csv-file-name}" format="text">
+            <exsl:document method="text" href="{$csv-file-name}">
                 <xsl:for-each select="  ./sumStat">
                     <xsl:value-of select="@type" />
                     <xsl:if test="following-sibling::sumStat">
@@ -111,7 +113,7 @@
                         <xsl:value-of select="$delimiter" />
                     </xsl:if>
                 </xsl:for-each>
-            </xsl:result-document>
+            </exsl:document>
             <xsl:text>&#10;</xsl:text>
         </xsl:for-each>
     </xsl:template>
