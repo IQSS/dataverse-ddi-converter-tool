@@ -19,9 +19,7 @@ def main():
     app.app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     # add CORS support
     CORS(app.app)
-    app.run(port=8520, debug=True)
-
-
+    app.run(port=8520, debug=True, threaded=True)
 
 if __name__ == '__main__':
     main()

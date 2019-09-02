@@ -2,6 +2,7 @@ import connexion
 import os
 import lxml.etree as ET
 import urllib.request
+import zipfile
 
 from pyDataverse.api import Api
 from datetime import datetime
@@ -82,9 +83,30 @@ def convert_ddi(ddi_file, dv_target, api_token, xsl_url, author_name=None, autho
             return "Error during transformation.", 500
         # #
         dataset_json = content(dir_name + '/dataset.json')
-        ingest_result = ingest_dataset(dv_target, dataset_json, api_token)
-        print("ingest result:")
-        print(ingest_result)
+        dv_resp = api.create_dataset(dv_target, dataset_json)
+
+        if dv_resp.status_code != 201:
+            return "ERROR, the response code isn't 201", dv_resp.status_code
+
+        identifier = dv_resp.json()['data']['persistentId']
+        print(identifier)
+
+        print ('creating archive of ' + dir_name)
+        zf = zipfile.ZipFile(dir_name + '/dataset-files.zip', mode='w')
+        files_to_upload = os.listdir(dir_name)
+        print(files_to_upload)
+        try:
+            for file_to_upload in files_to_upload:
+                print ('adding ' + dir_name + '/' + file_to_upload)
+                if file_to_upload not in  ['dataset-files.zip', 'dataset.json', 'converter.xsl']:
+                    zf.write(dir_name + '/' + file_to_upload)
+
+        finally:
+            print ('closing')
+            zf.close()
+        print(zf.infolist())
+        upload_files_resp = api.upload_file(identifier, dir_name + '/dataset-files.zip')
+        print(upload_files_resp)
         return "Upload success", 201
     else:
         return "ERROR", 404
@@ -111,11 +133,6 @@ def is_dataverse_target_exist(dataverse_alias_or_id, api_token):
     print(resp.status_code)
 
     return False
-
-def ingest_dataset(dataverse_target, jsondataset, api_token):
-    resp = api.create_dataset(dataverse_target, jsondataset)
-    print(resp)
-    return resp.status_code
 
 def create_directory_name():
     now = datetime.now()
