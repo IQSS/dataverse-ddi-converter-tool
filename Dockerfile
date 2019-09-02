@@ -1,12 +1,15 @@
-FROM python:3-alpine
+FROM python:3.7-alpine
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 COPY requirements.txt /usr/src/app/
 
-RUN pip3 install --no-cache-dir -r requirements.txt
-RUN pip3 install connexion[swagger-ui]
+RUN apk add --no-cache --virtual .build-deps gcc libc-dev libxslt-dev && \
+    apk add --no-cache libxslt && \
+    pip3 install -r requirements.txt && \
+    pip3 install --no-cache-dir lxml connexion[swagger-ui] flask-debugtoolbar flask_cors lxml xmltodict pyDataverse && \
+    apk del .build-deps
 
 COPY . /usr/src/app
 
@@ -14,5 +17,5 @@ EXPOSE 8080
 
 ENTRYPOINT ["python3"]
 
-CMD ["-f", "/dev/null"]
-# CMD ["-m", "swagger_server"]
+#CMD ["-f", "/dev/null"]
+CMD ["-m", "swagger_server"]
