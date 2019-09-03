@@ -2,24 +2,22 @@
 
 import connexion
 from flask_cors import CORS
-import os
+import logging
 
 from swagger_server import encoder
+from swagger_server import config
 
-UPLOAD_FOLDER = '/Users/akmi/eko-temp'
-ALLOWED_EXTENSIONS = {'xml'}
-# TODO: Using config.py
+
 def main():
-    # APP_ROOT = os.path.dirname(os.path.abspath(__file__))   # refers to application_top
-    # APP_STATIC = os.path.join(APP_ROOT, 'upload/temp')
-    # print(APP_STATIC)
     app = connexion.App(__name__, specification_dir='./swagger/')
     app.app.json_encoder = encoder.JSONEncoder
     app.add_api('swagger.yaml', arguments={'title': 'DDI Converter Tool'}, pythonic_params=True)
-    app.app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    logging.basicConfig(filename=config.DDI_CONVERTER_TOOL_LOG_FILE, level=logging.DEBUG,
+                        format='%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
+
     # add CORS support
     CORS(app.app)
-    app.run(port=8520, debug=True, threaded=True)
+    app.run(port=8520, debug=config.DDI_CONVERTER_TOOL_DEBUG, threaded=True)
 
 if __name__ == '__main__':
     main()

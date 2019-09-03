@@ -5,7 +5,8 @@ WORKDIR /usr/src/app
 
 COPY requirements.txt /usr/src/app/
 
-RUN apk add --no-cache --virtual .build-deps gcc libc-dev libxslt-dev curl && \
+RUN apk add curl && \
+    apk add --no-cache --virtual .build-deps gcc libc-dev libxslt-dev && \
     apk add --no-cache libxslt && \
     pip3 install -r requirements.txt && \
     pip3 install --no-cache-dir lxml connexion[swagger-ui] flask-debugtoolbar flask_cors lxml xmltodict pyDataverse && \
@@ -15,7 +16,7 @@ COPY . /usr/src/app
 
 COPY config.py /usr/src/app/swagger_server
 
-EXPOSE 8080
+EXPOSE 8520
 
 ENTRYPOINT ["python3"]
 

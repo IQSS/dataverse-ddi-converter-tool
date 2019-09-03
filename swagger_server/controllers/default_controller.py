@@ -3,16 +3,14 @@ import os
 import lxml.etree as ET
 import urllib.request
 import zipfile
+import logging
+
+from swagger_server import config
 
 from pyDataverse.api import Api
 from datetime import datetime
 
-
-# TODO: Using config.py
-ALLOWED_EXTENSIONS = {'xml'}
-TEMPORARY_DIRECTORY = '/Users/akmi/eko-temp'
-DATAVERSE_BASE_URL='http://ddvn.dans.knaw.nl:8080'
-api = Api(DATAVERSE_BASE_URL)
+api = Api(config.DATAVERSE_BASE_URL)
 
 
 def convert_ddi(ddi_file, dv_target, api_token, xsl_url, author_name=None, author_affiliation=None, contact_name=None, contact_email=None, subject=None):  # noqa: E501
@@ -42,7 +40,6 @@ def convert_ddi(ddi_file, dv_target, api_token, xsl_url, author_name=None, autho
     :rtype: None
     """
     xsl_src = urllib.request.urlopen(xsl_url)
-
     if xsl_src.getcode() != 200:
         return "NOT FOUND XSL", 404
     xsl = xsl_src.read()
@@ -54,9 +51,11 @@ def convert_ddi(ddi_file, dv_target, api_token, xsl_url, author_name=None, autho
         return "Dataverse Not Fould", 404
 
     uploaded_file = connexion.request.files['ddi_file']
+
     if uploaded_file and allowed_file(uploaded_file.filename):
         uploaded_filename = uploaded_file.filename
         dir_name =  create_directory_name()
+        os.mkdir(dir_name)
 
         xsl_content = xsl_content.replace('@TODO-AUTHOR-NAME@', author_name) \
             .replace('@TODO-AUTHOR-AFFILIATION@', author_affiliation) \
@@ -65,48 +64,46 @@ def convert_ddi(ddi_file, dv_target, api_token, xsl_url, author_name=None, autho
             .replace('@SUBJECT@', subject) \
             .replace('@OUTPUT-DIRECTORY-NAME@',dir_name)
 
-        os.mkdir(dir_name)
-
         with open(dir_name + '/converter.xsl', "w") as text_file:
             print(xsl_content, file=text_file)
 
         uploaded_file.save(os.path.join(dir_name, uploaded_filename))
 
         xml_file = dir_name + '/' + uploaded_filename
+        logging.debug('xml_file: ' + xml_file)
         dom = ET.parse(xml_file)
         xsl_file = dir_name + '/converter.xsl'
         xslt = ET.parse(xsl_file)
         transform = ET.XSLT(xslt)
         newdom = transform(dom)
-
         if not newdom:
             return "Error during transformation.", 500
         # #
         dataset_json = content(dir_name + '/dataset.json')
         dv_resp = api.create_dataset(dv_target, dataset_json)
-
+        logging.debug(dv_resp.status_code)
         if dv_resp.status_code != 201:
             return "ERROR, the response code isn't 201", dv_resp.status_code
 
         identifier = dv_resp.json()['data']['persistentId']
-        print(identifier)
+        logging.debug(identifier)
 
-        print ('creating archive of ' + dir_name)
+        logging.debug('creating archive of ' + dir_name)
         zf = zipfile.ZipFile(dir_name + '/dataset-files.zip', mode='w')
         files_to_upload = os.listdir(dir_name)
         print(files_to_upload)
         try:
             for file_to_upload in files_to_upload:
-                print ('adding ' + dir_name + '/' + file_to_upload)
+                logging.debug ('adding ' + dir_name + '/' + file_to_upload)
                 if file_to_upload not in  ['dataset-files.zip', 'dataset.json', 'converter.xsl']:
                     zf.write(dir_name + '/' + file_to_upload)
 
         finally:
             print ('closing')
             zf.close()
-        print(zf.infolist())
+        logging.debug(zf.infolist())
         upload_files_resp = api.upload_file(identifier, dir_name + '/dataset-files.zip')
-        print(upload_files_resp)
+        logging.debug(upload_files_resp)
         return "Upload success", 201
     else:
         return "ERROR", 404
@@ -114,7 +111,7 @@ def convert_ddi(ddi_file, dv_target, api_token, xsl_url, author_name=None, autho
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1].lower() in config.ALLOWED_EXTENSIONS
 
 
 def content(filepath):
@@ -136,10 +133,6 @@ def is_dataverse_target_exist(dataverse_alias_or_id, api_token):
 
 def create_directory_name():
     now = datetime.now()
-    return TEMPORARY_DIRECTORY + '/' + now.strftime("%Y-%m-%d_%H%M%S.%f")
-
-def add_file_suffic(filename):
-    now = datetime.now()
-    return filename.rsplit('.', 1)[0] + now.strftime("_%Y-%m-%d_%H%M%S.%f.") + filename.rsplit('.', 1)[1]
+    return config.TEMPORARY_DIRECTORY + '/' + now.strftime("%Y-%m-%d_%H%M%S.%f")
 
 
