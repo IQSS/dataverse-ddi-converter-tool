@@ -1,0 +1,6 @@
+{
+  "packageName" : "dct_server",
+  "packageVersion" : "0.5.0",
+  "defaultController" : "converter_controller",
+  "serverPort" : "8520"
+}

@@ -3,8 +3,8 @@
 import sys
 from setuptools import setup, find_packages
 
-NAME = "swagger_server"
-VERSION = "1.0.0"
+NAME = "dct_server"
+VERSION = "0.5.0"
 # To install the library, run the following
 #
 # python setup.py install
@@ -26,7 +26,7 @@ setup(
     package_data={'': ['swagger/swagger.yaml']},
     include_package_data=True,
     entry_points={
-        'console_scripts': ['swagger_server=swagger_server.__main__:main']},
+        'console_scripts': ['dct_server=dct_server.__main__:main']},
     long_description="""\
     DDI Converter Tool is an open source software for converting a DDI xml to Dataverse Metadata and its files\\ [DDI Converter Tool Github](https://github.com/ekoi/ddi-converter-tool). 
     """

@@ -96,7 +96,7 @@ paths:
           description: DDI couldn't have been converted or ingested.
         405:
           description: Invalid input
-      x-openapi-router-controller: swagger_server.controllers.default_controller
+      x-openapi-router-controller: dct_server.controllers.default_controller
 components:
   schemas:
     body:

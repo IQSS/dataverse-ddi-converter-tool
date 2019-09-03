@@ -5,7 +5,7 @@ import urllib.request
 import zipfile
 import logging
 
-from swagger_server import config
+from dct_server import config
 
 from pyDataverse.api import Api
 from datetime import datetime

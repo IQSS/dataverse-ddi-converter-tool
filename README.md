@@ -15,19 +15,19 @@ To run the server, please execute the following from the root directory:
 
 ```
 pip3 install -r requirements.txt
-python3 -m swagger_server
+python3 -m dct_server
 ```
 
 and open your browser to here:
 
 ```
-http://localhost:8080/api/ui/
+http://localhost:8520/api/ui/
 ```
 
 Your Swagger definition lives here:
 
 ```
-http://localhost:8080/api/swagger.json
+http://localhost:8520/api/swagger.json
 ```
 
 To launch the integration tests, use tox:
@@ -42,10 +42,10 @@ To run the server on a Docker container, please execute the following from the r
 
 ```bash
 # building the image
-docker build -t swagger_server .
+docker build -t dct_server .
 
 # starting up a container
-docker run -p 8080:8080 swagger_server
+docker run -p 8520:8520 dct_server
 ```
 
 swagger-codegen generate -i ddi-converter-tool.yaml -l python-flask  -o .

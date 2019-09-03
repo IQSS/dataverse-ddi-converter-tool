@@ -62,3 +62,8 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+.idea
+.vscode
+pom.xml
+dist

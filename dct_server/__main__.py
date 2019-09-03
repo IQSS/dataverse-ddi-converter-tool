@@ -4,8 +4,8 @@ import connexion
 from flask_cors import CORS
 import logging
 
-from swagger_server import encoder
-from swagger_server import config
+from dct_server import encoder
+from dct_server import config
 
 
 def main():
