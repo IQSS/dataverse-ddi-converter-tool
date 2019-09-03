@@ -2,6 +2,7 @@ FROM python:3.7-alpine
 
 RUN mkdir -p /usr/src/app && mkdir /usr/src/temp
 WORKDIR /usr/src/app
+ENV FLASK_ENV=development
 
 COPY requirements.txt /usr/src/app/
 
@@ -14,11 +15,10 @@ RUN apk add curl && \
 
 COPY . /usr/src/app
 
-COPY config.py /usr/src/app/swagger_server
+COPY config.py /usr/src/app/dct_server
 
 EXPOSE 8520
 
 ENTRYPOINT ["python3"]
 
-#CMD ["-f", "/dev/null"]
-CMD ["-m", "swagger_server"]
+CMD ["-m", "dct_server"]
