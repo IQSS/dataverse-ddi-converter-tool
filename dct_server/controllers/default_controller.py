@@ -80,7 +80,17 @@ def convert_ddi(ddi_file, dv_target, api_token, xsl_url, author_name=None, autho
             return "Error during transformation.", 500
         # #
         dataset_json = content(dir_name + '/dataset.json')
-        dv_resp = api.create_dataset(dv_target, dataset_json)
+        #dv_resp = api.create_dataset(dv_target, dataset_json)
+        # Replace pyDatavere with direct metadata deposit
+        headers = {'X-Dataverse-key': api_token}
+        headers_file = {
+        'X-Dataverse-key': api_token,
+        }
+        dataset_json = content(dir_name + '/dataset.json')
+        dv_resp = requests.post(
+                    config.DATAVERSE_BASE_URL + '/api/dataverses/' + dv_target + '/datasets',
+                    data=dataset_json, headers=headers)
+
         logging.debug(dv_resp.status_code)
         if dv_resp.status_code != 201:
             return "ERROR, the response code isn't 201", dv_resp.status_code
@@ -118,6 +128,7 @@ def content(filepath):
     text = open(filepath, 'r+')
     content = text.read()
     text.close()
+    content = content.replace('\n', '')
     return content.encode("utf-8")
 
 def is_dataverse_target_exist(dataverse_alias_or_id, api_token):
