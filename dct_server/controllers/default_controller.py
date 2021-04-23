@@ -1,4 +1,5 @@
 import connexion
+import requests
 import os
 import lxml.etree as ET
 import urllib.request
