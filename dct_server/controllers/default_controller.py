@@ -133,6 +133,9 @@ def content(filepath):
 
 def is_dataverse_target_exist(dataverse_alias_or_id, api_token):
     api.api_token=api_token
+    # Let's assume it does exist, check ToDo
+    return True
+
     print("api.api_token: " + api.api_token)
     resp = api.get_dataverse(dataverse_alias_or_id, api_token)
     if resp.status_code == 200:
