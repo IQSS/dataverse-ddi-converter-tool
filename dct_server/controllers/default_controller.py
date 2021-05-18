@@ -80,6 +80,9 @@ def convert_ddi(ddi_file, dv_target, api_token, xsl_url, author_name=None, autho
         if not newdom:
             return "Error during transformation.", 500
         # #
+        full_output_file = dir_name + '/dataset.json'
+        os.system(f"saxonb-xslt -o {full_output_file} -s {xml_file} -xsl {xsl_file}")
+
         dataset_json = content(dir_name + '/dataset.json')
         #dv_resp = api.create_dataset(dv_target, dataset_json)
         # Replace pyDatavere with direct metadata deposit
